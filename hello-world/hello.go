@@ -203,8 +203,116 @@ func structs() {
 	p := &v
 	p.Y = 1e9
 	fmt.Println(v)
+
+	// You can assign struct values using their name
+	v1 := Vertex{Y: 162, X: 12 }
+	fmt.Println(v1)
 }
 
+
+// Note: Arrays: the type [n]T is an array of n values of type T. The expression var a [10]int declares a variable a as an array of ten integers.
+// An array's length is part of its type, so arrays cannot be resized. This seems limiting, but don't worry; Go provides a convenient way of working with arrays.
+
+func arrays() {
+	var a [3]string
+	a[0] = "Hello"
+	a[1] = "World"
+	a[2] = World
+	fmt.Println(a[0], a[1])
+	fmt.Println(a)
+
+	primes := [6]int{2, 3, 5, 7, 11, 13}
+	fmt.Println(primes)
+
+	// Note: An array has a fixed size. A *slice*, on the other hand, is a dynamically-sized, flexible view into the elements of an array. In practice, slices are much more common than arrays.
+	var slice []int = primes[1:4] // [1:4)
+	var allSlice []int = primes[0:6] // [1:6) e.g. 1-5
+	b := primes[0:1] // Can also be instantiated using :=
+	// Will throw an out of bounds error: var allSlice []int = primes[0:7]
+	fmt.Println(slice, allSlice, b)
+
+	// Note: Slices are like references to arrays: A slice does not store any data, it just describes a section of an underlying array.
+	// Changing the elements of a slice modifies the corresponding elements of its underlying array. Other slices that share the same underlying array will see those changes.
+	names := [4]string{
+		"John",
+		"Paul",
+		"George",
+		"Ringo",
+	}
+	fmt.Println(names)
+
+	c := names[0:2]
+	d := names[1:3]
+	fmt.Println(a, b)
+
+	c[0] = "XXX"
+	fmt.Println(c, d)
+	fmt.Println(names)
+
+	allSlice[5] = 17
+	// Doesn't work because the range is not in the slice: b[5] = 17 : does compile though
+	fmt.Println(primes)
+
+	// Note: Slice literals: A slice literal is like an array literal without the length.
+	// This is an array literal: [3]bool{true, true, false}
+	// This creates the same array as above, then builds a slice that references it: []bool{true, true, false}
+	q := []int{2, 3, 5, 7, 11, 13}
+	fmt.Println(q)
+
+	r := []bool{true, false, true, true, false, true}
+	fmt.Println(r)
+
+	s := []struct {
+		i int
+		b bool
+	}{
+		{2, true},
+		{3, false},
+		{5, true},
+		{7, true},
+		{11, false},
+		{13, true},
+	}
+	fmt.Println(s)
+
+	// Note: Slice defaults : When slicing, you may omit the high or low bounds to use their defaults instead.
+	// The default is zero for the low bound and the length of the slice for the high bound.
+	t := []int{2, 3, 5, 7, 11, 13}
+	printSlice(t) // len=6 cap=6 [2 3 5 7 11 13]
+
+	t = t[1:4] // resulting in t = [3 5 7]
+	fmt.Println(t)
+
+	t = t[:2] // [0:2] resulting in t = [3 5]
+	fmt.Println(t)
+
+	t = t[1:] // [1:2] resulting in t = [5]
+	fmt.Println(t)
+
+	t = t[:] // [0:1] resulting in t = [5]
+	fmt.Println(t)
+
+	// Note: Slice length and capacity: A slice has both a length and a capacity.
+	// The length of a slice is the number of elements it contains.
+	// The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
+	// The length and capacity of a slice s can be obtained using the expressions len(s) and cap(s).
+	// You can extend a slice's length by re-slicing it, provided it has sufficient capacity.
+	printSlice(t) // len=1 cap=4 [5]
+	t = t[:4]
+	printSlice(t) // len=4 cap=4 [5 7 11 13]
+	t = t[2:4]
+	printSlice(t) // len=2 cap=2 [11 13] -- can never get back to the original capacity
+
+	// Note: Nil slices: The zero value of a slice is nil. A nil slice has a length and capacity of 0 and has no underlying array.
+	var u []int
+	v := []int{} // can't leave off the {} when using :=
+	printSlice(u) // len=0 cap=0 []
+	printSlice(v) // len=0 cap=0 []
+}
+
+func printSlice(s []int) {
+	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+}
 
 func main() {
 	// Using a user-created library
@@ -255,4 +363,6 @@ func main() {
 	pointers()
 	fmt.Println("calling the struct statements")
 	structs()
+	fmt.Println("calling the arrays statements")
+	arrays()
 }
