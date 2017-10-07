@@ -308,6 +308,14 @@ func arrays() {
 	v := []int{} // can't leave off the {} when using :=
 	printSlice(u) // len=0 cap=0 []
 	printSlice(v) // len=0 cap=0 []
+
+	// If a Slice is of an explicitly created array then the underlying array is not affected by the slice being modified / truncated
+	printSlice(allSlice)				// len=6 cap=6 [2 3 5 7 11 17] - same as primes array
+	allSlice = allSlice[3:5]			// Truncates the slice's capacity and the 'view' of the array to just two elements
+	printSlice(allSlice)				// len=2 cap=3 [7 11]
+	allSlice = allSlice[:cap(allSlice)] // Can be re-sized back to len=3 cap=3 [7 11 17]
+	printSlice(allSlice)
+	fmt.Println(primes)					// [2 3 5 7 11 17] - has not been truncated
 }
 
 func printSlice(s []int) {
