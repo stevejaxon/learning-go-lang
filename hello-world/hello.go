@@ -8,6 +8,7 @@ import (
 	"math/cmplx"
 	"runtime"
 	"github.com/stevejaxon/learning-go-lang/hello-world/stringutil"
+	"strings"
 )
 
 func add(x int, y int) int {
@@ -324,6 +325,56 @@ func arrays() {
 	if sl == nil {
 		fmt.Println("nil!")
 	}
+
+	// Slices can be created with the built-in make function; this is how you create dynamically-sized arrays.
+	// The make function allocates a zeroed array and returns a slice that refers to that array:
+	sli := make([]int, 5)  // len=5 cap=5 [0 0 0 0 0]
+	printSlice(sli)
+	// To specify a capacity, pass a third argument to make:
+	slic := make([]int, 12, 21)	// len=12 cap=21 [0 0 0 0 0 0 0 0 0 0 0 0]
+	printSlice(slic)
+
+	// Slices can contain any type, including other slices.
+	// Create a tic-tac-toe board.
+	board := [][]string{
+		[]string{"_", "_", "_"},
+		[]string{"_", "_", "_"},
+		[]string{"_", "_", "_"},
+	}
+
+	// The players take turns.
+	board[0][0] = "X"
+	board[2][2] = "O"
+	board[1][2] = "X"
+	board[1][0] = "O"
+	board[0][2] = "X"
+	board[0][1] = "O"
+	board[2][0] = "X"
+	board[1][1] = "O"
+	board[2][1] = "X"
+
+	// X O X
+	// O O X
+	// X X O
+	for i := 0; i < len(board); i++ {
+		fmt.Printf("%s\n", strings.Join(board[i], " "))
+	}
+
+	// It is common to append new elements to a slice, and so Go provides a built-in append function.
+	// The resulting value of append is a slice containing all the elements of the original slice plus the provided values.
+	// If the backing array of s is too small to fit all the given values a bigger array will be allocated. The returned slice will point to the newly allocated array.
+	// append works on nil slices.
+	sl = append(sl, 0)
+	printSlice(sl)						// len=1 cap=1 [0]
+	// The slice grows as needed.
+	sl = append(sl, 1, 2, 3, 4)
+	printSlice(sl)						// len=5 cap=6 [0 1 2 3 4]
+
+	allSlice = primes[:]
+	printSlice(allSlice)	// len=6 cap=6 [2 3 5 7 11 17] - back to the complete primes array
+	allSlice = append(allSlice, 19, 23, 29, 31, 37)	// len=11 cap=12 [2 3 5 7 11 17 19 23 29 31 37]
+	printSlice(allSlice)
+	fmt.Println(primes)		// [2 3 5 7 11 17] - the slice now points to a different array / the primes array has not been modified
 }
 
 func printSlice(s []int) {
