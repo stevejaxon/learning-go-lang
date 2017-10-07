@@ -316,6 +316,14 @@ func arrays() {
 	allSlice = allSlice[:cap(allSlice)] // Can be re-sized back to len=3 cap=3 [7 11 17]
 	printSlice(allSlice)
 	fmt.Println(primes)					// [2 3 5 7 11 17] - has not been truncated
+
+	// The zero value of a slice is nil.
+	// A nil slice has a length and capacity of 0 and has no underlying array.
+	var sl []int
+	printSlice(sl)
+	if sl == nil {
+		fmt.Println("nil!")
+	}
 }
 
 func printSlice(s []int) {
