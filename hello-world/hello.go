@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"github.com/stevejaxon/learning-go-lang/hello-world/stringutil"
 	"strings"
+	"golang.org/x/tour/pic"
 )
 
 func add(x int, y int) int {
@@ -377,6 +378,61 @@ func arrays() {
 	fmt.Println(primes)		// [2 3 5 7 11 17] - the slice now points to a different array / the primes array has not been modified
 }
 
+// Exercise: Slices
+// Implement Pic. It should return a slice of length dy, each element of which is a slice of dx 8-bit unsigned integers. When you run the program, it will display your picture, interpreting the integers as grayscale (well, bluescale) values.
+// The choice of image is up to you. Interesting functions include (x+y)/2, x*y, and x^y.
+//	(You need to use a loop to allocate each []uint8 inside the [][]uint8.)
+// (Use uint8(intValue) to convert between types.)
+func Pic(dx, dy int) [][]uint8 {
+	ret := make([][]uint8, dy)
+	for i := 0; i < dy; i++ {
+		ret[i] = make([]uint8, dx)
+		for j := 0; j < dx; j++ {
+			ret[i][j] = uint8((i^2 + j^2) ^ ((i * j) / 5) * 199)
+		}
+	}
+	return ret
+}
+
+func rangeStatement() {
+	// The range form of the for loop iterates over a slice or map.
+
+	// When ranging over a slice, two values are returned for each iteration. The first is the index, and the second is a copy of the element at that index.
+	var pow = []int{1, 2, 4, 8, 16, 32, 64, 128}
+
+	// 2**0 = 1
+	// 2**1 = 2
+	// 2**2 = 4
+	// 2**3 = 8
+	// 2**4 = 16
+	// 2**5 = 32
+	// 2**6 = 64
+	// 2**7 = 128
+	for i, v := range pow {
+		fmt.Printf("2**%d = %d\n", i, v)
+	}
+
+	pow = make([]int, 10)
+	// If you only want the index, drop the ", value" entirely.
+	for i := range pow {
+		pow[i] = 1 << uint(i) // == 2**i
+	}
+	// You can skip the index or value by assigning to _.
+	// 1
+	// z2
+	// 4
+	// 8
+	// 16
+	// 32
+	// 64
+	// 128
+	// 256
+	// 512
+	for _, value := range pow {
+		fmt.Printf("%d\n", value)
+	}
+}
+
 func printSlice(s []int) {
 	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
 }
@@ -432,4 +488,9 @@ func main() {
 	structs()
 	fmt.Println("calling the arrays statements")
 	arrays()
+	fmt.Println("calling the slices exercise")
+	// requires <code>go get golang.org/x/tour/pic</code>
+	pic.Show(Pic)
+	fmt.Println("calling the range statements")
+	rangeStatement()
 }
