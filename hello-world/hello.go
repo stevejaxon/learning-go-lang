@@ -433,6 +433,59 @@ func rangeStatement() {
 	}
 }
 
+func mapStatement() {
+	type Vertex struct {
+		Lat, Long float64
+	}
+
+	// A map maps keys to values.
+
+	// The zero value of a map is nil. A nil map has no keys, nor can keys be added.
+	var m map[string]Vertex
+
+	// The make function returns a map of the given type, initialized and ready for use.
+	m = make(map[string]Vertex)
+	m["Bell Labs"] = Vertex{
+		40.68433, -74.39967,
+	}
+	fmt.Println(m["Bell Labs"]) // {40.68433 -74.39967}
+
+	// Map literals are like struct literals, but the keys are required.
+	var lit = map[string]Vertex{
+		"Bell Labs": Vertex{
+			40.68433, -74.39967,
+		},
+		"Google": Vertex{
+			37.42202, -122.08408,
+		},
+	}
+	fmt.Println(lit) // map[Bell Labs:{40.68433 -74.39967} Google:{37.42202 -122.08408}]
+
+	// If the top-level type is just a type name, you can omit it from the elements of the literal.
+	var omit = map[string]Vertex{
+		"Bell Labs": {40.68433, -74.39967},
+		"Google":    {37.42202, -122.08408},
+	}
+	fmt.Println(omit) // map[Bell Labs:{40.68433 -74.39967} Google:{37.42202 -122.08408}]
+
+	// Insert or update an element in map :
+	m["Bell Labs"] = Vertex{
+		42.68433, -71.39967,
+	}
+	// Retrieve an element:
+	fmt.Println(m["Bell Labs"]) // {42.68433 -71.39967}
+
+	// Delete an element:
+	delete(omit, "Google")
+	fmt.Println(omit) // map[Bell Labs:{40.68433 -74.39967}]
+
+	// Test that a key is present with a two-value assignment:
+	v, ok := lit["Bell Labs"]
+	fmt.Println(v, ok) // {40.68433 -74.39967} true
+	v, ok = lit["Foo"]
+	fmt.Println(v, ok) // {0 0} false
+}
+
 func printSlice(s []int) {
 	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
 }
@@ -493,4 +546,6 @@ func main() {
 	pic.Show(Pic)
 	fmt.Println("calling the range statements")
 	rangeStatement()
+	fmt.Println("calling the map statements")
+	mapStatement()
 }
