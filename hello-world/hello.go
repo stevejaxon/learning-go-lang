@@ -10,6 +10,7 @@ import (
 	"github.com/stevejaxon/learning-go-lang/hello-world/stringutil"
 	"strings"
 	"golang.org/x/tour/pic"
+	"golang.org/x/tour/wc"
 )
 
 func add(x int, y int) int {
@@ -486,6 +487,31 @@ func mapStatement() {
 	fmt.Println(v, ok) // {0 0} false
 }
 
+// Exercise: Maps
+// Implement WordCount. It should return a map of the counts of each “word” in the string s.
+// The wc.Test function runs a test suite against the provided function and prints success or failure.
+func WordCount(s string) map[string]int {
+	words := strings.Fields(s)
+	wordsCounts := make(map[string]int)
+	count := count(words)
+	for _, word := range words {
+		wordsCounts[word] = count[word]
+	}
+	return wordsCounts
+}
+
+func count(words []string) map[string]int {
+	count := make(map[string]int)
+	for _, word := range words {
+		if _, ok := count[word]; ok {
+			count[word] = count[word] + 1
+		} else {
+			count[word] = 1
+		}
+	}
+	return count
+}
+
 func printSlice(s []int) {
 	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
 }
@@ -548,4 +574,7 @@ func main() {
 	rangeStatement()
 	fmt.Println("calling the map statements")
 	mapStatement()
+	fmt.Println("calling the map exercise")
+	// requires <code>go get golang.org/x/tour/wc</code>
+	wc.Test(WordCount)
 }
