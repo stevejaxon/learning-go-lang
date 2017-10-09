@@ -379,6 +379,10 @@ func arrays() {
 	fmt.Println(primes)		// [2 3 5 7 11 17] - the slice now points to a different array / the primes array has not been modified
 }
 
+func printSlice(s []int) {
+	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+}
+
 // Exercise: Slices
 // Implement Pic. It should return a slice of length dy, each element of which is a slice of dx 8-bit unsigned integers. When you run the program, it will display your picture, interpreting the integers as grayscale (well, bluescale) values.
 // The choice of image is up to you. Interesting functions include (x+y)/2, x*y, and x^y.
@@ -512,8 +516,69 @@ func count(words []string) map[string]int {
 	return count
 }
 
-func printSlice(s []int) {
-	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+// name (params) return type
+func compute(fn func(float64, float64) float64) float64 {
+	return fn(3, 4)
+}
+
+// The adder function returns a closure. Each closure is bound to its own sum variable.
+func adder() func(int) int {
+	sum := 0
+	return func(x int) int {
+		sum += x
+		return sum
+	}
+}
+
+func functionStatement() {
+	// Functions are values too. They can be passed around just like other values.
+	// Function values may be used as function arguments and return values.
+	hypot := func(x, y float64) float64 {
+		return math.Sqrt(x*x + y*y)
+	}
+	fmt.Println(hypot(5, 12)) // 13
+
+	fmt.Println(compute(hypot)) // 5
+	fmt.Println(compute(math.Pow)) // 81
+
+	// Go functions may be closures. A closure is a function value that references variables from outside its body.
+	// The function may access and assign to the referenced variables; in this sense the function is "bound" to the variables.
+	// Seems to act a bit like an instance of a class with attributes - and the functions act upon only these attributes
+	pos, neg := adder(), adder()
+	for i := 0; i < 10; i++ {
+
+		// 0 0
+		// 1 -2
+		// 3 -6
+		// 6 -12
+		// 10 -20
+		// 15 -30
+		// 21 -42
+		// 28 -56
+		// 36 -72
+		// 45 -90
+		fmt.Println(
+			pos(i),
+			neg(-2*i),
+		)
+	}
+}
+
+// Exercise: Fibonacci closure
+// Implement a fibonacci function that returns a function (a closure) that returns successive fibonacci numbers (0, 1, 1, 2, 3, 5, ...).
+// fibonacci is a function that returns
+// a function that returns an int.
+func fibonacci() func() int {
+	x := 0
+	y := 1
+	return func() int {
+		temp := x
+		x = y
+		y = temp + y
+		return x
+
+		// or x, y = y, x + y
+	}
 }
 
 func main() {
@@ -577,4 +642,11 @@ func main() {
 	fmt.Println("calling the map exercise")
 	// requires <code>go get golang.org/x/tour/wc</code>
 	wc.Test(WordCount)
+	fmt.Println("calling the function statements")
+	functionStatement()
+	fmt.Println("calling the function exercise")
+	f := fibonacci()
+	for i := 0; i < 10; i++ {
+		fmt.Println(f())
+	}
 }
