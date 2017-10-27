@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 	"fmt"
+	"golang.org/x/tour/tree"
 )
 
 func say(s string) {
@@ -62,6 +63,141 @@ func controllingChannelsExample() {
 	}
 }
 
+
+func fibonacciSelect(c, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x:
+			x, y = y, x+y
+		case <-quit:
+			fmt.Println("quit")
+			return
+		}
+	}
+}
+
+func selectExample() {
+	c := make(chan int)
+	quit := make(chan int)
+	go func() {
+		for i := 0; i < 10; i++ {
+			fmt.Println(<-c)
+		}
+		quit <- 0
+	}()
+	fibonacciSelect(c, quit)
+
+	// The default case in a select is run if no other case is ready.
+	// Use a default case to try a send or receive without blocking:
+	tick := time.Tick(100 * time.Millisecond)
+	boom := time.After(500 * time.Millisecond)
+	for {
+		select {
+		case <-tick:
+			fmt.Println("tick.")
+		case <-boom:
+			fmt.Println("BOOM!")
+			return // Breaks out of the for-loop
+		default:
+			fmt.Println("    .")
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
+
+// Walk walks the tree t sending all values
+// from the tree to the channel ch.
+func Walk(t *tree.Tree, ch chan int) {
+	fmt.Println(t.String())
+	walkSubTree(t, ch)
+	// Need to close the channel here
+	close(ch)
+}
+
+func walkSubTree(t *tree.Tree, ch chan int, ) {
+	if t == nil {
+		return
+	}
+	walkSubTree(t.Left, ch)
+	ch <- t.Value
+	walkSubTree(t.Right, ch)
+}
+
+func WalkQuit(t *tree.Tree, ch, quit chan int) {
+	walkSubTreeQuit(t, ch, quit)
+	close(ch)
+}
+
+func walkSubTreeQuit(t *tree.Tree, ch, quit chan int) {
+	if t == nil {
+		return
+	}
+	walkSubTreeQuit(t.Left, ch, quit)
+	select {
+	case ch <- t.Value:
+		// Value successfully sent.
+	case <-quit:
+		return
+	}
+	walkSubTreeQuit(t.Right, ch, quit)
+}
+
+// Same determines whether the trees
+// t1 and t2 contain the same values.
+func Same(t1, t2 *tree.Tree) bool {
+	w1, w2 := make(chan int), make(chan int)
+
+	go Walk(t1, w1)
+	go Walk(t2, w2)
+
+	for {
+		v1, ok1 := <-w1
+		v2, ok2 := <-w2
+		if !ok1 || !ok2 {
+			return ok1 == ok2
+		}
+		if v1 != v2 {
+			return false
+		}
+	}
+}
+
+func printContentsOfChannel(ch chan int) {
+	for i := range ch {
+		fmt.Println(i)
+	}
+}
+func channelExercise() {
+	ch := make(chan int, 10)
+	fmt.Println("Walk tree(1)")
+	go Walk(tree.New(1), ch)
+	printContentsOfChannel(ch)
+	fmt.Println("Walk tree(2)")
+	ch = make(chan int, 10)
+	go Walk(tree.New(2), ch)
+	printContentsOfChannel(ch)
+	fmt.Println("Walk tree quit(3)")
+	ch = make(chan int, 10)
+	quit := make(chan int)
+	defer close(quit)
+	go WalkQuit(tree.New(3), ch, quit)
+	printContentsOfChannel(ch)
+	fmt.Print("tree.New(1) == tree.New(1): ")
+	if Same(tree.New(1), tree.New(1)) {
+		fmt.Println("PASSED")
+	} else {
+		fmt.Println("FAILED")
+	}
+
+	fmt.Print("tree.New(1) != tree.New(2): ")
+	if !Same(tree.New(1), tree.New(2)) {
+		fmt.Println("PASSED")
+	} else {
+		fmt.Println("FAILED")
+	}
+}
+
 func main() {
 	// GOROUTINE
 	// A goroutine is a lightweight thread managed by the Go runtime.
@@ -99,4 +235,14 @@ func main() {
 	fmt.Println("calling the controlling channels statements")
 	controllingChannelsExample()
 
+	// SELECT
+	// The select statement lets a goroutine wait on multiple communication operations.
+	// A select blocks until one of its cases can run, then it executes that case. It chooses one at random if multiple are ready.
+	fmt.Println("calling the select statements")
+	selectExample()
+
+	// CHANNEL EXERCISE
+	// Requires "go get golang.org/x/tour/tree" to be run first
+	fmt.Println("calling the channel exercise")
+	channelExercise()
 }
