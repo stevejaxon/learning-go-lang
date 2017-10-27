@@ -42,10 +42,31 @@ func bufferedChannelExamples() {
 	fmt.Println(<-ch)
 }
 
+func fibonacciChannels(n int, c chan int) {
+	x, y := 0, 1
+	for i := 0; i < n; i++ {
+		c <- x
+		x, y = y, x+y
+	}
+	// Note: Only the sender should close a channel, never the receiver. Sending on a closed channel will cause a panic.
+	// Note: Channels aren't like files; you don't usually need to close them. Closing is only necessary when the receiver must be told there are no more values coming, such as to terminate a range loop.
+	close(c)
+}
+
+func controllingChannelsExample() {
+	c := make(chan int, 10)
+	go fibonacciChannels(cap(c), c) // Also works if it is not run in a separate goroutine
+	// The loop for i := range c receives values from the channel repeatedly until it is closed.
+	for i := range c {
+		fmt.Println(i)
+	}
+}
+
 func main() {
 	// GOROUTINE
 	// A goroutine is a lightweight thread managed by the Go runtime.
 	// go <func> starts a new goroutine running
+	fmt.Println("calling the goroutine statements")
 	go say("world")
 	say("hello")
 
@@ -60,12 +81,22 @@ func main() {
 
 	// Like maps and slices, channels must be created before use:
 	// ch := make(chan int)
-	// By default, sends and receives block until the other side is ready. This allows goroutines to synchronize without explicit locks or condition variables.
+	// NOTE: By default, sends and receives block until the other side is ready. This allows goroutines to synchronize without explicit locks or condition variables.
+	fmt.Println("calling the channel statements")
 	channelExamples()
 
 	// BUFFERED CHANNELS
 	// Channels can be buffered. Provide the buffer length as the second argument to make to initialize a buffered channel:
 	// ch := make(chan int, 100)
 	// Sends to a buffered channel block only when the buffer is full. Receives block when the buffer is empty.
+	fmt.Println("calling the buffered channel statements")
 	bufferedChannelExamples()
+
+	// CONTROLLING CHANNELS
+	// A sender can close a channel to indicate that no more values will be sent. Receivers can test whether a channel has been closed by assigning a second parameter to the receive expression:
+	// v, ok := <-ch
+	// ok is false if there are no more values to receive and the channel is closed.
+	fmt.Println("calling the controlling channels statements")
+	controllingChannelsExample()
+
 }
