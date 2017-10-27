@@ -4,6 +4,8 @@ import (
 	"time"
 	"fmt"
 	"golang.org/x/tour/tree"
+	"sync"
+	"errors"
 )
 
 func say(s string) {
@@ -198,6 +200,153 @@ func channelExercise() {
 	}
 }
 
+// SafeCounter is safe to use concurrently.
+type SafeCounter struct {
+	v   map[string]int
+	mux sync.Mutex
+}
+
+// Inc increments the counter for the given key.
+// We can define a block of code to be executed in mutual exclusion by surrounding it with a call to Lock and Unlock
+func (c *SafeCounter) Inc(key string) {
+	c.mux.Lock()
+	// Lock so only one goroutine at a time can access the map c.v.
+	c.v[key]++
+	c.mux.Unlock()
+}
+
+// Value returns the current value of the counter for the given key.
+func (c *SafeCounter) Value(key string) int {
+	c.mux.Lock()
+	// Lock so only one goroutine at a time can access the map c.v.
+	// We can also use defer to ensure the mutex will be unlocked as in the Value method.
+	defer c.mux.Unlock()
+	return c.v[key]
+}
+
+func mutexExample() {
+	c := SafeCounter{v: make(map[string]int)}
+	for i := 0; i < 1000; i++ {
+		go c.Inc("somekey")
+	}
+
+	time.Sleep(time.Second)
+	fmt.Println(c.Value("somekey"))
+}
+
+//
+func mutexExercise() {
+	Crawl("http://golang.org/", 4, fetcher)
+}
+
+type Fetcher interface {
+	// Fetch returns the body of URL and a slice of URLs found on that page.
+	Fetch(url string) (body string, urls []string, err error)
+}
+
+var fetched = struct {
+	m map[string]error
+	sync.Mutex
+}{m: make(map[string]error)}
+
+var loading = errors.New("url load in progress") // sentinel value
+
+// Crawl uses fetcher to recursively crawl
+// pages starting with url, to a maximum of depth.
+func Crawl(url string, depth int, fetcher Fetcher) {
+	if depth <= 0 {
+		fmt.Printf("<- Done with %v, depth 0.\n", url)
+		return
+	}
+
+	fetched.Lock()
+	if _, ok := fetched.m[url]; ok {
+		fetched.Unlock()
+		fmt.Printf("<- Done with %v, already fetched.\n", url)
+		return
+	}
+	// We mark the url to be loading to avoid others reloading it at the same time.
+	fetched.m[url] = loading
+	fetched.Unlock()
+
+	// We load it concurrently.
+	body, urls, err := fetcher.Fetch(url)
+
+	// And update the status in a synced zone.
+	fetched.Lock()
+	fetched.m[url] = err
+	fetched.Unlock()
+
+	if err != nil {
+		fmt.Printf("<- Error on %v: %v\n", url, err)
+		return
+	}
+	fmt.Printf("Found: %s %q\n", url, body)
+	done := make(chan bool)
+	for i, u := range urls {
+		fmt.Printf("-> Crawling child %v/%v of %v : %v.\n", i, len(urls), url, u)
+		go func(url string) {
+			Crawl(url, depth-1, fetcher)
+			done <- true
+		}(u)
+	}
+	for i, u := range urls {
+		fmt.Printf("<- [%v] %v/%v Waiting for child %v.\n", url, i, len(urls), u)
+		<-done
+	}
+	fmt.Printf("<- Done with %v\n", url)
+}
+
+
+// fakeFetcher is Fetcher that returns canned results.
+type fakeFetcher map[string]*fakeResult
+
+type fakeResult struct {
+	body string
+	urls []string
+}
+
+func (f fakeFetcher) Fetch(url string) (string, []string, error) {
+	if res, ok := f[url]; ok {
+		return res.body, res.urls, nil
+	}
+	return "", nil, fmt.Errorf("not found: %s", url)
+}
+
+// fetcher is a populated fakeFetcher.
+var fetcher = fakeFetcher{
+	"http://golang.org/": &fakeResult{
+		"The Go Programming Language",
+		[]string{
+			"http://golang.org/pkg/",
+			"http://golang.org/cmd/",
+		},
+	},
+	"http://golang.org/pkg/": &fakeResult{
+		"Packages",
+		[]string{
+			"http://golang.org/",
+			"http://golang.org/cmd/",
+			"http://golang.org/pkg/fmt/",
+			"http://golang.org/pkg/os/",
+		},
+	},
+	"http://golang.org/pkg/fmt/": &fakeResult{
+		"Package fmt",
+		[]string{
+			"http://golang.org/",
+			"http://golang.org/pkg/",
+		},
+	},
+	"http://golang.org/pkg/os/": &fakeResult{
+		"Package os",
+		[]string{
+			"http://golang.org/",
+			"http://golang.org/pkg/",
+		},
+	},
+}
+
 func main() {
 	// GOROUTINE
 	// A goroutine is a lightweight thread managed by the Go runtime.
@@ -245,4 +394,14 @@ func main() {
 	// Requires "go get golang.org/x/tour/tree" to be run first
 	fmt.Println("calling the channel exercise")
 	channelExercise()
+
+	// SYNC.MUTEX
+	// Go's standard library provides mutual exclusion with sync.Mutex and its two methods: Lock and Unlock
+	fmt.Println("calling the mutex statements")
+	mutexExample()
+
+	// CHANNEL EXERCISE
+	// Use Go's concurrency features to parallelise a web crawler.
+	fmt.Println("calling the mutex exercise")
+	mutexExercise()
 }
