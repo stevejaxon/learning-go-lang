@@ -14,8 +14,8 @@ func CountSheep(num int) string {
 
   builder := strings.Builder{}
   for i := 1; i <= num; i++ {
-	builder.WriteString(strconv.Itoa(i))
-	builder.WriteString(suffix)
+	  builder.WriteString(strconv.Itoa(i))
+	  builder.WriteString(suffix)
   }
   return builder.String()
 }
