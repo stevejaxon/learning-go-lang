@@ -1,13 +1,11 @@
 package kata
 
+// Solution to https://www.codewars.com/kata/all-inclusive/train/go
 func ContainAllRots(input string, arr []string) bool { 
-    if input == "" && len(arr) == 0 {
+  if input == "" {
 		return true
 	}
 	rotations := rotations(input)
-	if len(arr) < len(input) { 
-		return false 
-	}
 	for _, perm := range rotations {
 		if ! contains(perm, arr) {
 			return false
