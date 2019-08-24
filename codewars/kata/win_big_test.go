@@ -3,6 +3,8 @@ import (
   . "github.com/onsi/ginkgo"
   . "github.com/onsi/gomega"
   . "github.com/stevejaxon/learning-go-lang/codewars/kata"
+  "math/big"
+  "math/rand"
 )
 
 var _ = Describe("Example tests", func() {
@@ -29,4 +31,48 @@ var _ = Describe("Example tests", func() {
 		Expect(Play("9223372036854775807", "1")).To(Equal([2]string{"9223372036854775808", "0"}))
 		Expect(Play("9223372034707292159", "1")).To(Equal([2]string{"9223372034707292157", "3"}))
 	})
+
+	It("Valid random test cases", func() {
+		rnd := rand.New(rand.NewSource(42))
+		for i := 0; i < 10; i++ {
+			jackpot := getVeryLargeRandom(rnd)
+			jackpotString := jackpot.String()
+			gamble := getValidGambleAmount(rnd, jackpot).String()
+			Expect(Play(jackpotString, gamble)).To(Equal(solution(jackpotString, gamble)))
+		}
+	})
 })
+
+func getVeryLargeRandom(rnd *rand.Rand) *big.Int {
+	max, _ := new(big.Int).SetString("100000000000000000000000000", 10)
+	return new(big.Int).Rand(rnd, max)
+}
+
+func getValidGambleAmount(rnd *rand.Rand, jackpot *big.Int) *big.Int {
+	max := new(big.Int).Div(jackpot, big.NewInt(int64(2)))
+	return new(big.Int).Rand(rnd, max)
+}
+
+func solution(reserves, gambled string) [2]string {
+	amountInMachine, _ := new(big.Int).SetString(reserves, 10)
+	amountGambled, _ := new(big.Int).SetString(gambled, 10)
+	jackpot := new(big.Int).Mul(amountGambled, big.NewInt(int64(2)))
+	if jackpot.Cmp(amountInMachine) > 0 {
+		return [2]string{reserves, gambled}
+	}
+	if hasWon(amountInMachine) {
+		remaining := new(big.Int).Sub(amountInMachine, jackpot)
+		payout := new(big.Int).Add(amountGambled, jackpot)
+		return [2]string{remaining.String(), payout.String()}
+	}
+	remaining := new(big.Int).Add(amountInMachine, amountGambled)
+	return [2]string{remaining.String(), "0"}
+}
+
+func hasWon(amountInMachine *big.Int) bool {
+	numBits := amountInMachine.BitLen()
+	if numBits & 1 == 1 {
+		return amountInMachine.Bit(numBits/2) == uint(0)
+	}
+	return false
+}
