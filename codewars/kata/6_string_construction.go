@@ -1,11 +1,10 @@
 package kata
 
 func StringConstructing(a, s string) int {
-	fmt.Println(s)
-	return evaluate([]rune(a), []rune(a), []rune(s), 1)
+	return evaluate(a,a,s, 1)
 }
 
-func evaluate(origAlphabet, remainingAlphabet, word []rune, cost int) int {
+func evaluate(origAlphabet, remainingAlphabet, word string, cost int) int {
 	if len(word) == 0 { 
 		return cost + len(remainingAlphabet)
 	}
